@@ -79,7 +79,9 @@ spec:
           # need more cpu upon initialization, therefore burstable class
           limits:
             cpu: 1000m
+            mem: 2Gi
           requests:
+            mem: 2Gi
             cpu: 100m
         ports:
         - containerPort: 9200
