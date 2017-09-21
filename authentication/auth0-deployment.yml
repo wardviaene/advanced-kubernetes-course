@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kubernetes-auth-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kubernetes-auth-server
+    spec:
+      containers:
+      - name: kubernetes-auth-server
+        image: wardviaene/kubernetes-auth-server:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - name: app-port
+          containerPort: 3000
+        env:
+          - name: AUTH0_CLIENT_ID
+            value: l2hw3kcFNRxUCcusnAh6kT3fjbPt0H5Q # change into your client id
+          - name: AUTH0_DOMAIN
+            value: newtechacademy.eu.auth0.com # change into your domain
+          - name: AUTH0_CALLBACK_URL
+            value: http://authserver.kubernetes.newtech.academy/callback # change into your callback url
+          - name: AUTH0_API_ID
+            value: https://newtechacademy.eu.auth0.com/userinfo # change into your identifier
+          - name: AUTH0_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: auth0-secrets
+                key: AUTH0_CLIENT_SECRET
