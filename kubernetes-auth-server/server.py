@@ -18,6 +18,11 @@ from jose import jwt
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import urlopen
 
+from flask import Response
+
+import urllib3
+urllib3.disable_warnings()
+
 import constants
 
 ENV_FILE = find_dotenv()
@@ -29,6 +34,8 @@ AUTH0_CLIENT_ID = env.get(constants.AUTH0_CLIENT_ID)
 AUTH0_CLIENT_SECRET = env.get(constants.AUTH0_CLIENT_SECRET)
 AUTH0_DOMAIN = env.get(constants.AUTH0_DOMAIN)
 AUTH0_AUDIENCE = env.get(constants.API_ID)
+APP_HOST = env.get(constants.APP_HOST)
+KUBERNETES_UI_HOST = env.get(constants.KUBERNETES_UI_HOST)
 
 APP = Flask(__name__, static_url_path='/public', static_folder='./public')
 APP.secret_key = constants.SECRET_KEY
@@ -65,21 +72,6 @@ auth0 = oauth.remote_app(
     authorize_url='/authorize',
 )
 
-auth0_offline = oauth.remote_app(
-    'auth0offline',
-    consumer_key=AUTH0_CLIENT_ID,
-    consumer_secret=AUTH0_CLIENT_SECRET,
-    request_token_params={
-        'scope': 'offline access',
-        'audience': AUTH0_AUDIENCE
-    },
-    base_url='https://%s' % AUTH0_DOMAIN,
-    access_token_method='POST',
-    access_token_url='/oauth/token',
-    authorize_url='/authorize',
-)
-
-
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -97,38 +89,27 @@ def home():
 
 @APP.route('/callback')
 def callback_handling():
-    if request.args['code']:
-      print('code: '+request.args['code'])
-      #conn = http.client.HTTPSConnection("")
-      payload = "{\"grant_type\":\"authorization_code\",\"client_id\": \""+AUTH0_CLIENT_ID+"\",\"client_secret\": \""+AUTH0_CLIENT_SECRET+"\",\"code\": \""+request.args['code']+"\",\"redirect_uri\": \""+AUTH0_CALLBACK_URL+"\"}"
-      headers = { 'content-type': "application/json" }
-      print('going to post: '+payload)
-      #conn.request("POST", "/newtechacademy.eu.auth0.com/oauth/token", payload, headers)
-      res = requests.post('https://'+AUTH0_DOMAIN+'/oauth/token', json=json.loads(payload))
-      print('posted: ' + res.text)
-      #res = conn.getresponse()
-      session[constants.OFFLINE] = res.text
-      print(session[constants.OFFLINE])
-    else:
-      resp = auth0.authorized_response()
-      if resp is None:
-          raise AuthError({'code': request.args['error_reason'],
-                           'description': request.args['error_description']}, 401)
+    resp = auth0.authorized_response()
+    if resp is None:
+        raise AuthError({'code': request.args['error_reason'],
+                         'description': request.args['error_description']}, 401)
 
-      # Obtain JWT and the keys to validate the signature
-      id_token = resp['id_token']
-      jwks = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+    # Obtain JWT and the keys to validate the signature
+    id_token = resp['id_token']
+    jwks = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
 
-      payload = jwt.decode(id_token, jwks.read().decode('utf-8'), algorithms=['RS256'],
-                           audience=AUTH0_CLIENT_ID, issuer="https://"+AUTH0_DOMAIN+"/")
+    payload = jwt.decode(id_token, jwks.read().decode('utf-8'), algorithms=['RS256'],
+                         audience=AUTH0_CLIENT_ID, issuer="https://"+AUTH0_DOMAIN+"/")
 
-      session[constants.JWT_PAYLOAD] = payload
+    session[constants.JWT_PAYLOAD] = payload
 
-      session[constants.PROFILE_KEY] = {
-          'user_id': payload['sub'],
-          'name': payload['name'],
-          'picture': payload['picture']
-      }
+    session[constants.ID_TOKEN] = id_token
+
+    session[constants.PROFILE_KEY] = {
+        'user_id': payload['sub'],
+        'name': payload['name'],
+        'picture': payload['picture']
+    }
 
     return redirect('/dashboard')
 
@@ -136,11 +117,6 @@ def callback_handling():
 @APP.route('/login')
 def login():
     return auth0.authorize(callback=AUTH0_CALLBACK_URL)
-
-@APP.route('/offline')
-def offline():
-    return auth0_offline.authorize(callback=AUTH0_CALLBACK_URL)
-
 
 @APP.route('/logout')
 def logout():
@@ -154,12 +130,43 @@ def logout():
 def dashboard():
     return render_template('dashboard.html',
                            userinfo=session[constants.PROFILE_KEY],
-                           userinfo_raw=session[constants.JWT_PAYLOAD],
-                           token=session[constants.OFFLINE],
-                           issuer_url=AUTH0_DOMAIN,
-                           client_id=AUTH0_CLIENT_ID,
-                           client_secret=AUTH0_CLIENT_SECRET,
+                           id_token=session[constants.ID_TOKEN],
                            userinfo_pretty=json.dumps(session[constants.JWT_PAYLOAD], indent=4))
+
+@APP.route('/ui', defaults={'path': ''})
+@APP.route('/api', defaults={'path': ''})
+@APP.route('/api/<path:path>')
+@requires_auth
+def proxy_ui(path):
+    # add bearer token
+    new_headers = {key: value for (key, value) in request.headers if key != 'Host'}
+    new_headers['Authorization'] = 'Bearer ' +session[constants.ID_TOKEN]
+
+    url = request.url.replace(APP_HOST, KUBERNETES_UI_HOST).replace('http://', 'https://')
+    try: 
+      resp = requests.request(
+          method=request.method,
+          url=url,
+          headers=new_headers,
+          data=request.get_data(),
+          cookies=request.cookies,
+          allow_redirects=False,
+          verify=False # remove this line when using real SSL certs
+      )
+
+      print("proxied: " + url + " - with status: " + str(resp.status_code))
+      excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+      headers = [(name, value) for (name, value) in resp.raw.headers.items()
+                 if name.lower() not in excluded_headers]
+
+      response = Response(resp.content, resp.status_code, headers)
+      return response
+
+    except Exception as inst:
+      print(inst)
+      raise inst
+      #return 'error: ' + str(inst)
+
 
 
 

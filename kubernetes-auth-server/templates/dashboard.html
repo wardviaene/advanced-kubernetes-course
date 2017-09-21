@@ -15,16 +15,8 @@
                     <img class="avatar" src="{{userinfo['picture']}}"/>
                     <h2>Welcome {{userinfo['name']}}</h2>
                     <pre>{{userinfo_pretty}}</pre>
-                    <h2>kubectl login</h2>
-                    <pre>kubectl config set-credentials {{userinfo['user_id']}} \
-   --auth-provider=oidc \
-   --auth-provider-arg=idp-issuer-url= \
-   --auth-provider-arg=client-id= \
-   --auth-provider-arg=client-secret= \
-   --auth-provider-arg=refresh-token= \
-   --auth-provider-arg=idp-certificate-authority= \
-   --auth-provider-arg=id-token= \
-</pre>
+                    <pre>id_token: {{id_token}}</pre>
+                    <a class="btn btn-primary btn-lg btn-logout btn-block" href="/ui">Access UI</a>
                     <a class="btn btn-primary btn-lg btn-logout btn-block" href="/logout">Logout</a>
                 </div>
             </div>
