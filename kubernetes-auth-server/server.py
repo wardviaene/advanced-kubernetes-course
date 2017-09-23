@@ -167,6 +167,12 @@ def proxy_ui(path):
       raise inst
       #return 'error: ' + str(inst)
 
+@APP.route('/kubectl')
+def kubectl():
+  payload = {"grant_type":"http://auth0.com/oauth/grant-type/password-realm","username": request.args.get('username'),"password": request.args.get('password'),"client_id": AUTH0_CLIENT_ID, "client_secret": AUTH0_CLIENT_SECRET,"realm": "Username-Password-Authentication", "scope": "openid", "audience": AUTH0_AUDIENCE}
+  r = requests.post("https://"+AUTH0_DOMAIN+"/oauth/token", json=payload)
+  return r.text
+
 
 
 
