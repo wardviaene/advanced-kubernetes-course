@@ -18,7 +18,7 @@ spec:
           containerPort: 3000
         env:
           - name: AUTH0_CLIENT_ID
-            value: l2hw3kcFNRxUCcusnAh6kT3fjbPt0H5Q # change into your client id
+            value:  # change into your client id
           - name: AUTH0_DOMAIN
             value: newtechacademy.eu.auth0.com # change into your domain
           - name: AUTH0_CALLBACK_URL
@@ -27,6 +27,10 @@ spec:
             value: https://newtechacademy.eu.auth0.com/userinfo # change into your identifier
           - name: AUTH0_CONNECTION
             value: Username-Password-Authentication # auth0 user database connection
+          - name: KUBERNETES_UI_HOST
+            value: api.kubernetes.newtech.academy
+          - name: APP_HOST
+            value: authserver.kubernetes.newtech.academy
           - name: AUTH0_CLIENT_SECRET
             valueFrom:
               secretKeyRef:

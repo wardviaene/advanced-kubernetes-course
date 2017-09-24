@@ -26,15 +26,23 @@ def auth():
   password = getpass.getpass()
 
   r = requests.get("http://"+APP_HOST+"/kubectl?username="+login+"&password="+password)
-  
-  id_token = json.loads(r.text)['id_token']
 
-  jwks = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+  resp = json.loads(r.text)
 
-  with open(HOME+'/.kube/jwks.json', 'w') as f: f.write (jwks.read().decode('utf-8'))
-  with open(HOME+'/.kube/id_token', 'w') as f: f.write (id_token)
+  if 'error' in resp:
 
-  print(id_token) 
+    print("There was an auth0 error: "+resp['error']+": "+resp['error_description'])
+
+  else:
+
+    id_token = resp['id_token']
+
+    jwks = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+
+    with open(HOME+'/.kube/jwks.json', 'w') as f: f.write (jwks.read().decode('utf-8'))
+    with open(HOME+'/.kube/id_token', 'w') as f: f.write (id_token)
+
+    print(id_token) 
 
 def main():
   try:
@@ -48,6 +56,8 @@ def main():
   except OSError as e:
     auth()
   except jwt.ExpiredSignatureError as e:
+    auth()
+  except jwt.JWTClaimsError as e:
     auth()
 
 
