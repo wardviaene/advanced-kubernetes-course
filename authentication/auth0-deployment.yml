@@ -25,6 +25,8 @@ spec:
             value: http://authserver.kubernetes.newtech.academy/callback # change into your callback url
           - name: AUTH0_API_ID
             value: https://newtechacademy.eu.auth0.com/userinfo # change into your identifier
+          - name: AUTH0_CONNECTION
+            value: Username-Password-Authentication # auth0 user database connection
           - name: AUTH0_CLIENT_SECRET
             valueFrom:
               secretKeyRef:

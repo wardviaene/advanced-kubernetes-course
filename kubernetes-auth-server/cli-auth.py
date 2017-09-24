@@ -47,7 +47,7 @@ def main():
     print(id_token) 
   except OSError as e:
     auth()
-  except jwt.InvalidTokenError as e:
+  except jwt.ExpiredSignatureError as e:
     auth()
 
 

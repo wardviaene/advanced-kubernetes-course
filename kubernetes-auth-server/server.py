@@ -34,6 +34,7 @@ AUTH0_CLIENT_ID = env.get(constants.AUTH0_CLIENT_ID)
 AUTH0_CLIENT_SECRET = env.get(constants.AUTH0_CLIENT_SECRET)
 AUTH0_DOMAIN = env.get(constants.AUTH0_DOMAIN)
 AUTH0_AUDIENCE = env.get(constants.API_ID)
+AUTH0_CONNECTION = env.get(constants.AUTH0_CONNECTION)
 APP_HOST = env.get(constants.APP_HOST)
 KUBERNETES_UI_HOST = env.get(constants.KUBERNETES_UI_HOST)
 
@@ -169,7 +170,7 @@ def proxy_ui(path):
 
 @APP.route('/kubectl')
 def kubectl():
-  payload = {"grant_type":"http://auth0.com/oauth/grant-type/password-realm","username": request.args.get('username'),"password": request.args.get('password'),"client_id": AUTH0_CLIENT_ID, "client_secret": AUTH0_CLIENT_SECRET,"realm": "Username-Password-Authentication", "scope": "openid", "audience": AUTH0_AUDIENCE}
+  payload = {"grant_type":"http://auth0.com/oauth/grant-type/password-realm","username": request.args.get('username'),"password": request.args.get('password'),"client_id": AUTH0_CLIENT_ID, "client_secret": AUTH0_CLIENT_SECRET,"realm": AUTH0_CONNECTION, "scope": "openid", "audience": AUTH0_AUDIENCE}
   r = requests.post("https://"+AUTH0_DOMAIN+"/oauth/token", json=payload)
   return r.text
 
