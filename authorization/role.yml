@@ -18,7 +18,7 @@ metadata:
   namespace: default
 subjects:
 - kind: Group
-  name: admin
+  name: developers
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
