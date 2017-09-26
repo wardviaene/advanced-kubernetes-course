@@ -1,11 +1,5 @@
 # kube authentication resources
 
-Create UI:
-
-```
-kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.6.3.yaml
-```
-
 Add oidc setup to kops cluster:
 
 ```
@@ -15,3 +9,10 @@ spec:
     oidcClientID: clientid
     oidcUsernameClaim: sub
 ```
+
+Create UI:
+
+```
+kubectl create -f https://raw.githubusercontent.com/kubernetes/kops/master/addons/kubernetes-dashboard/v1.6.3.yaml
+```
+
