@@ -2,7 +2,7 @@
 
 * Create IAM user that has access to an S3 bucket
 * Make changes to spinnaker.yml
-* helm install --name demo -f spinnaker.yaml stable/spinnaker
+* helm install --name demo -f spinnaker.yml stable/spinnaker
 
 # Git and docker
 * Setup git repository on github or bitbucket
