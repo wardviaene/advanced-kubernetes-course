@@ -1,0 +1,74 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: prometheus-operator
+  name: prometheus-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: prometheus-operator
+    spec:
+      containers:
+      - args:
+        - --kubelet-service=kube-system/kubelet
+        - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
+        image: quay.io/coreos/prometheus-operator:v0.13.0
+        name: prometheus-operator
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+      serviceAccountName: prometheus-operator
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  labels:
+    prometheus: prometheus
+spec:
+  replicas: 2
+  version: v1.7.0
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchExpressions:
+    - {key: prometheus-enabled, operator: Exists}
+  #ruleSelector:
+  #  matchLabels:
+  #    role: prometheus-rulefiles
+  #    prometheus: k8s
+  resources:
+    requests:
+      # 2Gi is default, but won't schedule if you don't have a node with >2Gi
+      # memory. Modify based on your target and time-series count for
+      # production use. This value is mainly meant for demonstration/testing
+      # purposes.
+      memory: 400Mi
+  #alerting:
+  #  alertmanagers:
+  #  - namespace: monitoring
+  #    name: alertmanager-main
+  #    port: web
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  type: LoadBalancer
+  ports:
+  - name: web
+    port: 9090
+    protocol: TCP
+    targetPort: web
+  selector:
+    prometheus: prometheus
