@@ -9,6 +9,7 @@ kubectl create -f rbac.yml
 prometheus:
 ```
 kubectl create -f prometheus.yml
+kubectl create -f prometheus-resource.yml
 ```
 
 Kubernetes monitoring:
