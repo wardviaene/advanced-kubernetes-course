@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-auth-server
-        image: wardviaene/kubernetes-auth-server:1.0.0
+        image: wardviaene/kubernetes-auth-server:1.0.1
         imagePullPolicy: Always
         ports:
         - name: app-port
