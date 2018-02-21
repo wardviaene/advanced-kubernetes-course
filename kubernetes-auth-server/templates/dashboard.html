@@ -16,7 +16,8 @@
                     <h2>Welcome {{userinfo['name']}}</h2>
                     <pre>{{userinfo_pretty}}</pre>
                     <pre>id_token: {{id_token}}</pre>
-                    <a class="btn btn-primary btn-lg btn-logout btn-block" href="/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard">Access UI</a>
+                    <a class="btn btn-primary btn-lg btn-logout btn-block" href="/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/">Access UI</a>
+                    <a class="btn btn-primary btn-lg btn-logout btn-block" href="/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard">Access UI (1.7.x)</a>
                     <a class="btn btn-primary btn-lg btn-logout btn-block" href="/logout">Logout</a>
                 </div>
             </div>
