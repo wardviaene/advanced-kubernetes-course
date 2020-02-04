@@ -14,6 +14,7 @@ spec:
       labels:
         name: linkerd-viz
     spec:
+      serviceAccount: linkerd
       containers:
       - name: linkerd-viz
         image: buoyantio/linkerd-viz:0.1.5
